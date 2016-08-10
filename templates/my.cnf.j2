@@ -1,0 +1,82 @@
+[mysqld]
+
+# GENERAL #
+user                            = mysql
+default-storage-engine          = InnoDB
+socket                          = /var/lib/mysql/mysql.sock
+pid-file                        = /var/run/mysqld/mysqld.pid
+symbolic-links                  = 0
+explicit_defaults_for_timestamp = true
+
+# CHARACTER SET AND COLLATION #
+collation-server        = utf8_unicode_ci
+character-set-server    = utf8
+init-connect            = 'SET NAMES utf8'
+
+# DATA STORAGE AND LOGGING #
+datadir                 = /var/lib/mysql
+tmpdir                  = /tmp
+slow_query_log_file     = slow.log
+slow_query_log          = 1
+long_query_time         = 8
+log_error               = error.log
+
+# REPLICATION #
+#server-id                   = 1
+#log-bin                     = mysql-bin
+#binlog-format               = MIXED
+#gtid-mode                   = on
+#enforce-gtid-consistency    = true
+#log-slave-updates           = true
+#expire_logs_days            = 7
+
+# CACHES, LIMITS AND BUFFERS #
+max_connections             = 250       # Max open connections
+max_connect_errors          = 10000     # Blocks host after number of errors. FLUSH HOSTS to re-allow
+open_files_limit            = 20000     # SHOW GLOBAL STATUS LIKE '%open%' to see number of currently open files
+table_open_cache            = 5000      # Increase this if system var 'opened_tables' is large, mysql is opening/closing tables a lot
+back_log                    = 100       # Size of connection request queue, in case swamped with requests in a very short span
+interactive_timeout         = 600       # Timeout before disconnecting an inactive command line client
+max_allowed_packet          = 1GB       # Size of the largest BLOB you want to use. Protocol limit is 1GB
+slave_max_allowed_packet    = 1GB       # Make sure slaves have the same max packet as the master
+tmp_table_size              = 128M      # How large tmp tables can grow, must match max_heap_table_size
+max_heap_table_size         = 128M      # See: tmp_table_size
+query_cache_size            = 32M       # Performance pentalty for flushing the cache may increase if set larger than 64-128M
+thread_cache_size           = 64        # How many threads the server should cache for reuse
+
+# Per-thread Buffers (meaning *keep them low!!*)
+read_rnd_buffer_size  = 8M
+join_buffer_size      = 4M  # per thread * per join
+
+# InnoDB #
+
+innodb_log_file_size                = {{ dbserver_innodb_log_file_size }} # at least 10x largest blob size
+innodb_data_file_path               = ibdata1:10M:autoextend
+innodb_log_buffer_size              = 8M
+
+innodb_buffer_pool_size             = {{ dbserver_innodb_buffer_pool_size }}
+innodb_flush_method                 = O_DIRECT
+innodb_max_dirty_pages_pct          = 80
+innodb_file_per_table               = ON
+innodb_lock_wait_timeout            = 50
+innodb_read_io_threads              = 64
+innodb_write_io_threads             = 64
+innodb_io_capacity                  = 5000
+innodb_thread_concurrency           = 0
+innodb_file_format                  = {{ dbserver_innodb_file_format }}
+innodb_buffer_pool_dump_at_shutdown = on # "pre warms" your buffer pool on a mysql reboot
+innodb_buffer_pool_load_at_startup  = on
+innodb_buffer_pool_populate         = on
+
+# Default value of 1 will mean each update transaction commit (or each statement outside of transaction)
+# will need to flush log to the disk which is rather expensive, especially if you do not have Battery
+# backed up cache. Many applications, especially those moved from MyISAM tables are OK with value 2 which
+# means do not flush log to the disk but only flush it to OS cache. The log is still flushed to the disk
+# each second so you normally would not loose more than 1-2 sec worth of updates. Value 0 is a bit faster
+# but is a bit less secure as you can lose transactions even in case MySQL Server crashes. Value 2 only
+# cause data loss with full OS crash.
+innodb_flush_log_at_trx_commit = 2
+
+[mysqldump]
+
+max_allowed_packet  = 1GB

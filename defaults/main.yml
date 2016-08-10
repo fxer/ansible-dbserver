@@ -1,0 +1,10 @@
+dbserver_packages:
+  - Percona-Server-server-56
+  - Percona-Server-client-56
+  - Percona-Server-shared-56
+
+dbserver_innodb_buffer_pool_size: '24GB'
+dbserver_innodb_log_file_size: '2GB' # 10x the size of largest blob
+dbserver_innodb_file_format: 'BARRACUDA'
+
+dbserver_firewall_port: 3306 # Port to open in the firewall, set to -1 to only allow localhost access

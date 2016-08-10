@@ -1,0 +1,36 @@
+---
+
+- name: Add Percona repo
+  package:
+    name: 'http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm'
+    state: present
+    update_cache: yes
+
+- name: Install Percona packages
+  package:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items: "{{ dbserver_packages }}"
+  notify:
+    - restart mysql
+
+- name: Configure firewalld port
+  firewalld:
+    port: "{{ dbserver_firewall_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  when: dbserver_firewall_port > 0
+  tags: dbserver2
+
+- name: Configure my.cnf
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify:
+    - restart mysql
