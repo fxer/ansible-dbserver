@@ -7,7 +7,8 @@ socket                          = /var/lib/mysql/mysql.sock
 pid-file                        = /var/run/mysqld/mysqld.pid
 symbolic-links                  = 0
 explicit_defaults_for_timestamp = true
-lower_case_table_names          = 1   # MySQL best practice if using InnoDB 
+lower_case_table_names          = 1   # MySQL best practice if using InnoDB
+sql_mode                        = STRICT_TRANS_TABLES
 
 # CHARACTER SET AND COLLATION #
 collation-server        = utf8_unicode_ci
